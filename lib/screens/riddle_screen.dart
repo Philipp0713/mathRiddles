@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/riddle.dart';
 import '../widgets/answer_pad.dart';
+import '../widgets/note_overlay.dart';
 
 /// Shared screen shell for every math puzzle. [riddle] supplies the
 /// question shown in the middle of the screen; this widget supplies
@@ -27,6 +28,8 @@ class _RiddleScreenState extends State<RiddleScreen> {
   int _score = 0;
   String? _feedback;
   Color? _feedbackColor;
+  int _generation = 0;
+  bool _answerLocked = false;
 
   @override
   void initState() {
@@ -59,7 +62,10 @@ class _RiddleScreenState extends State<RiddleScreen> {
 
     final correct = widget.riddle.checkAnswer(_answerController.text);
     setState(() {
-      if (correct) _score++;
+      if (correct) {
+        _score++;
+        _answerLocked = true;
+      }
       _feedback = correct ? 'Correct!' : 'Incorrect.';
       _feedbackColor = correct ? Colors.green : Colors.red;
     });
@@ -76,6 +82,8 @@ class _RiddleScreenState extends State<RiddleScreen> {
     setState(() {
       _answerController.clear();
       _feedback = null;
+      _answerLocked = false;
+      _generation++;
       widget.riddle.generate();
     });
   }
@@ -86,6 +94,12 @@ class _RiddleScreenState extends State<RiddleScreen> {
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
+          if (widget.riddle.hasHint)
+            IconButton(
+              icon: const Icon(Icons.lightbulb_outline),
+              tooltip: 'Hint',
+              onPressed: widget.riddle.revealHint,
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Center(child: Text('Score: $_score Points')),
@@ -96,21 +110,27 @@ class _RiddleScreenState extends State<RiddleScreen> {
         child: Column(
           children: [
             Expanded(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      widget.riddle.build(context),
-                      if (_feedback != null) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          _feedback!,
-                          style: TextStyle(color: _feedbackColor, fontSize: 16),
-                        ),
+              child: NoteOverlay(
+                key: ValueKey(_generation),
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        widget.riddle.build(context),
+                        if (_feedback != null) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            _feedback!,
+                            style: TextStyle(
+                              color: _feedbackColor,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -121,6 +141,7 @@ class _RiddleScreenState extends State<RiddleScreen> {
               onCheck: _checkAnswer,
               onSolution: _showSolution,
               onNext: _nextRiddle,
+              locked: _answerLocked,
             ),
           ],
         ),

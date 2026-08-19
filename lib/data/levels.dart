@@ -27,9 +27,9 @@ final List<Level> levels = [
   Level(
     id: 'sequence',
     title: 'Sequence Riddle',
-    description: 'Solve simple sequence riddles at your own pace.',
+    description: 'Solve hard sequence riddles at your own pace.',
     icon: Icons.add_circle_outline,
-    difficulty: LevelDifficulty.medium,
+    difficulty: LevelDifficulty.hard,
     builder: (context) =>
         RiddleScreen(title: 'Sequnce Riddle', riddle: SequenceRiddle()),
   )

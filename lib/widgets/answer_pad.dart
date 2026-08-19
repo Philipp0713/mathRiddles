@@ -6,6 +6,10 @@ import 'package:flutter/services.dart';
 /// with one thumb on a phone. The field also accepts direct keyboard/IME
 /// input, so both entry methods stay in sync through the same
 /// [controller].
+///
+/// While [locked] (a correct answer has just been submitted), the keypad
+/// is hidden and the field becomes read-only, so the answer can't be
+/// changed until the next riddle.
 class AnswerPad extends StatelessWidget {
   const AnswerPad({
     super.key,
@@ -14,6 +18,7 @@ class AnswerPad extends StatelessWidget {
     required this.onCheck,
     required this.onSolution,
     required this.onNext,
+    this.locked = false,
   });
 
   final TextEditingController controller;
@@ -21,6 +26,7 @@ class AnswerPad extends StatelessWidget {
   final VoidCallback onCheck;
   final VoidCallback onSolution;
   final VoidCallback onNext;
+  final bool locked;
 
   static const _digitRows = [
     ['1', '2', '3'],
@@ -60,6 +66,7 @@ class AnswerPad extends StatelessWidget {
           children: [
             TextField(
               controller: controller,
+              readOnly: locked,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               textAlign: TextAlign.center,
@@ -70,24 +77,32 @@ class AnswerPad extends StatelessWidget {
               ),
               onChanged: (_) => onChanged(),
             ),
-            const SizedBox(height: 12),
-            for (final row in _digitRows)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    for (final digit in row)
-                      _PadButton(label: digit, onTap: () => _appendDigit(digit)),
-                  ],
+            if (!locked) ...[
+              const SizedBox(height: 12),
+              for (final row in _digitRows)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      for (final digit in row)
+                        _PadButton(
+                          label: digit,
+                          onTap: () => _appendDigit(digit),
+                        ),
+                    ],
+                  ),
                 ),
+              Row(
+                children: [
+                  _PadButton(label: 'C', onTap: _clear),
+                  _PadButton(label: '0', onTap: () => _appendDigit('0')),
+                  _PadButton(
+                    icon: Icons.backspace_outlined,
+                    onTap: _backspace,
+                  ),
+                ],
               ),
-            Row(
-              children: [
-                _PadButton(label: 'C', onTap: _clear),
-                _PadButton(label: '0', onTap: () => _appendDigit('0')),
-                _PadButton(icon: Icons.backspace_outlined, onTap: _backspace),
-              ],
-            ),
+            ],
             const SizedBox(height: 12),
             Row(
               children: [

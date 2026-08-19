@@ -24,4 +24,16 @@ abstract class Riddle extends ChangeNotifier {
 
   /// Shown in the feedback message when a submitted answer was wrong.
   String get correctAnswerLabel;
+
+  /// Whether this riddle currently has another hint to give. `RiddleScreen`
+  /// only shows a hint button while this is true, so puzzles that don't
+  /// want hints can leave the default (always `false`).
+  bool get hasHint => false;
+
+  /// Reveals progressively more of the puzzle. Called once per press of
+  /// the hint button; each call may do something different (reveal one
+  /// more data point, then finally the underlying rule, etc.) — it's up
+  /// to [build] to reflect whatever was revealed. Must call
+  /// [notifyListeners] so the screen rebuilds.
+  void revealHint() {}
 }
