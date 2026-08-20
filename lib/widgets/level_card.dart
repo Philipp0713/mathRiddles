@@ -16,6 +16,10 @@ class LevelCard extends StatelessWidget {
         return 'Medium';
       case LevelDifficulty.hard:
         return 'Hard';
+      case LevelDifficulty.insane:
+        return 'Insane';
+      case LevelDifficulty.impossible:
+        return 'Impossible';
     }
   }
 

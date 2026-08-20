@@ -52,6 +52,12 @@ class AnswerPad extends StatelessWidget {
     onChanged();
   }
 
+  void _toggleSign() {
+    final text = controller.text;
+    controller.text = text.startsWith('-') ? text.substring(1) : '-$text';
+    onChanged();
+  }
+
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
@@ -67,8 +73,10 @@ class AnswerPad extends StatelessWidget {
             TextField(
               controller: controller,
               readOnly: locked,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              keyboardType: const TextInputType.numberWithOptions(
+                signed: true,
+              ),
+              inputFormatters: [_SignedDigitsFormatter()],
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall,
               decoration: const InputDecoration(
@@ -95,6 +103,7 @@ class AnswerPad extends StatelessWidget {
               Row(
                 children: [
                   _PadButton(label: 'C', onTap: _clear),
+                  _PadButton(label: '±', onTap: _toggleSign),
                   _PadButton(label: '0', onTap: () => _appendDigit('0')),
                   _PadButton(
                     icon: Icons.backspace_outlined,
@@ -130,6 +139,20 @@ class AnswerPad extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Accepts an optional leading "-" followed by digits, rejecting anything
+/// else (a minus elsewhere in the text, more than one, letters, ...).
+class _SignedDigitsFormatter extends TextInputFormatter {
+  static final _pattern = RegExp(r'^-?\d*$');
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return _pattern.hasMatch(newValue.text) ? newValue : oldValue;
   }
 }
 

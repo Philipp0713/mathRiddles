@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-enum LevelDifficulty { easy, medium, hard }
+enum LevelDifficulty { easy, medium, hard, insane, impossible }
 
 /// A single playable math puzzle shown in the level menu.
 ///

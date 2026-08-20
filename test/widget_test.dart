@@ -47,6 +47,41 @@ void main() {
   });
 
   testWidgets(
+    'Answer field accepts negative numbers via keypad and keyboard',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const MathRiddleApp());
+      await tester.tap(find.text('Play'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Addition Riddle'));
+      await tester.pumpAndSettle();
+
+      final answerField = find.byType(TextField);
+
+      // On-screen keypad: digits then the ± toggle.
+      await tester.tap(find.widgetWithText(OutlinedButton, '4'));
+      await tester.tap(find.widgetWithText(OutlinedButton, '2'));
+      await tester.tap(find.widgetWithText(OutlinedButton, '±'));
+      await tester.pump();
+      expect(tester.widget<TextField>(answerField).controller!.text, '-42');
+
+      // Toggling again flips back to positive.
+      await tester.tap(find.widgetWithText(OutlinedButton, '±'));
+      await tester.pump();
+      expect(tester.widget<TextField>(answerField).controller!.text, '42');
+
+      // Direct keyboard/IME input also accepts a leading minus.
+      await tester.enterText(answerField, '-17');
+      await tester.pump();
+      expect(tester.widget<TextField>(answerField).controller!.text, '-17');
+
+      // A minus anywhere other than the front is rejected.
+      await tester.enterText(answerField, '1-7');
+      await tester.pump();
+      expect(tester.widget<TextField>(answerField).controller!.text, '-17');
+    },
+  );
+
+  testWidgets(
     'A correct check hides the keypad and locks the answer field',
     (WidgetTester tester) async {
       await tester.pumpWidget(const MathRiddleApp());
@@ -115,8 +150,15 @@ void main() {
           tester.widget<Text>(find.textContaining('?')).data!;
       int termCount() => sequenceText().split(', ').length - 1;
 
+      // The definition text is "f(n) = ..." for the quadratic/cubic
+      // riddles, or "x_0 = ..., x_1 = ..., x_n = ..." for the recursive
+      // one — funType is random, so accept either.
+      bool definitionShown() =>
+          find.textContaining('f(n) =').evaluate().isNotEmpty ||
+          find.textContaining('x_n =').evaluate().isNotEmpty;
+
       final initialTermCount = termCount();
-      expect(find.textContaining('f(n) ='), findsNothing);
+      expect(definitionShown(), isFalse);
 
       for (var extraTerms = 1; extraTerms <= 3; extraTerms++) {
         await tester.tap(find.byIcon(Icons.lightbulb_outline));
@@ -128,7 +170,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.lightbulb_outline));
       await tester.pump();
 
-      expect(find.textContaining('f(n) ='), findsOneWidget);
+      expect(definitionShown(), isTrue);
       expect(find.byIcon(Icons.lightbulb_outline), findsNothing);
     },
   );
